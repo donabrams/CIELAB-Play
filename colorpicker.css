@@ -2,7 +2,7 @@ body {
   font-size: 11pt;
 }
 header {
-  background-color: while;
+  background-color: #fff;
   padding: 0.5em 0;
 }
 header h1 {
@@ -14,7 +14,6 @@ header h1 {
 header p {
   text-align: center;
   display: inline;
-  text-transform: lowercase;
   color: #333;
 }
 header p+p:before {
@@ -44,9 +43,14 @@ aside .gridline {
   border-bottom: 1px solid #000;
   left: 0;
 }
+aside .gridline:nth-child(5n) {
+  border-width: 2px;
+}
 aside .vert {
   -webkit-transform: rotateZ(90deg);
-  -webkit-transform-origin: 0 0;
+  -webkit-transform-origin: 0 100%;
+  height: 10px;
+  margin-top: -12px;
 }
 main .block {
   display: inline-block;

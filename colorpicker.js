@@ -4,7 +4,11 @@ var Lmax = 155.0;
 var Amin = -155.0;
 var Amax = 155.0;
 var Bmin = -155.0;
-var Bmax = 155.0;
+var Bmax = 180.0;
+
+var defaultBlockWidth = 3; //px
+var blockBorder = 0;//1;//px
+var blockMargin = 0;//3;//px
 
 // create the setup
 var createBlocks = function(w) {
@@ -25,9 +29,6 @@ var createBlocks = function(w) {
 	main.style.width = mainWidth + "px";
 
 	// determine block sizes
-	var defaultBlockWidth = 5; //px
-	var blockBorder = 0;//1;//px
-	var blockMargin = 0;//3;//px
 	var cellWidth = defaultBlockWidth + blockBorder*2 + blockMargin*2;
 	var cols = Math.floor(mainWidth / cellWidth);
 	var rows = Math.floor((mainHeight-2) / cellWidth);
@@ -49,21 +50,31 @@ var createBlocks = function(w) {
 	var bPerHash = (Bmax - Bmin) * hashDist/mainHeight;
 	for (i=0;i<mainHeight/hashDist;i++) {
 		hash = document.createElement("div");
-		hash.innerHTML = i == 0 ? "B" : Math.floor(Bmin + i*bPerHash);
+		if (i == 0) {
+			hash.innerHTML = "B*";
+			hash.style["font-weight"] = 800;
+		} else {
+			hash.innerHTML = Math.floor(Bmin + i*bPerHash);
+		}
 		hash.classList.add("gridline");
-		hash.style.bottom = (footer.scrollHeight + hashDist*i) + "px";
-		hash.style.width = mainWidth + "px";
+		hash.style.bottom = (footer.scrollHeight + hashDist*i + extraPaddingHeight + 2) + "px";
+		hash.style.width = (mainWidth-extraPaddingWidth*2) + "px";
 		axis.appendChild(hash);
 	}
 	var aPerHash = (Amax - Amin) * hashDist/mainWidth;
 	for (i=0;i<mainWidth/hashDist;i++) {
 		hash = document.createElement("div");
-		hash.innerHTML = i == 0 ? "A" : Math.floor(Amin + i * aPerHash);
+		if (i == 0) {
+			hash.innerHTML = "A*";
+			hash.style["font-weight"] = 800;
+		} else {
+			hash.innerHTML = Math.floor(Amin + i * aPerHash);
+		}
 		hash.classList.add("gridline");
 		hash.classList.add("vert");
-		hash.style.top = header.scrollHeight + "px";
+		hash.style.top = (header.scrollHeight + extraPaddingWidth) + "px";
 		hash.style.left = (hashDist*i) + "px";
-		hash.style.width = mainHeight + "px";
+		hash.style.width = (mainHeight-extraPaddingHeight*2) + "px";
 		axis.appendChild(hash);
 	}
 	//axis[0].style.top = header.scrollHeight + "px";
@@ -205,7 +216,7 @@ window.addEventListener("load", function() {(function(w) {
 		}
 		colorBlocks(w, depthPerc);
 		document.getElementById("l-star").innerHTML = depthPerc*Lmax;
-		//setTimeout(stepAndRender, 0);
+		setTimeout(stepAndRender, 0);
 	};
 	setTimeout(stepAndRender, 0);
 
