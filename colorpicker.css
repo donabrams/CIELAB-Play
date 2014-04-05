@@ -38,7 +38,5 @@ main {
   border-width: 1px 0;
 }
 main .block {
-  border: 1px solid #000;
-  margin: 3px;
   display: inline-block;
 }
