@@ -1,12 +1,39 @@
+fadeColor = #333
+body
+	font-size 11pt
 header
-	height 1.5em
 	background-color while
-	border-bottom 1px black
+	padding .5em 0
 	h1
-		float left
+		emscale = 1.5
+		font-size (100% * emscale) 
+		display inline
+		margin auto (1em / emscale)
+		text-transform capitalize
 	p
 		text-align center
-footer
-	height 1em
-	background-color black
-	border-top 1px white
+		display inline
+		text-transform lowercase
+		color fadeColor
+
+	p+p:before
+		content "\2022\0020"
+		color fadeColor
+footer 
+	background-color white
+	position absolute
+	bottom 0
+	width 100%
+	p
+		text-align right
+		margin .5em 1em
+		color fadeColor
+main
+	display none
+	border 1px solid black
+	border-width 1px 0
+
+main .block
+	border 1px solid black
+	margin 3px
+	display inline-block

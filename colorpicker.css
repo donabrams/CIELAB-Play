@@ -1,16 +1,44 @@
+body {
+  font-size: 11pt;
+}
 header {
-  height: 1.5em;
   background-color: while;
-  border-bottom: 1px #000;
+  padding: 0.5em 0;
 }
 header h1 {
-  float: left;
+  font-size: 150%;
+  display: inline;
+  margin: auto 0.6666666666666666em;
+  text-transform: capitalize;
 }
 header p {
   text-align: center;
+  display: inline;
+  text-transform: lowercase;
+  color: #333;
+}
+header p+p:before {
+  content: "\2022\0020";
+  color: #333;
 }
 footer {
-  height: 1em;
-  background-color: #000;
-  border-top: 1px #fff;
+  background-color: #fff;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+}
+footer p {
+  text-align: right;
+  margin: 0.5em 1em;
+  color: #333;
+}
+main {
+  display: none;
+  border: 1px solid #000;
+  border-width: 1px 0;
+}
+main .block {
+  border: 1px solid #000;
+  margin: 3px;
+  display: inline-block;
 }
