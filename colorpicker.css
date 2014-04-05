@@ -37,6 +37,17 @@ main {
   border: 1px solid #000;
   border-width: 1px 0;
 }
+aside .gridline {
+  position: absolute;
+  display: block;
+  text-align: center;
+  border-bottom: 1px solid #000;
+  left: 0;
+}
+aside .vert {
+  -webkit-transform: rotateZ(90deg);
+  -webkit-transform-origin: 0 0;
+}
 main .block {
   display: inline-block;
 }

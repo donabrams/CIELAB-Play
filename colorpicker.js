@@ -1,8 +1,18 @@
+// Constants to tweak
+var Lmin = 0;
+var Lmax = 155.0;
+var Amin = -155.0;
+var Amax = 155.0;
+var Bmin = -155.0;
+var Bmax = 155.0;
+
+// create the setup
 var createBlocks = function(w) {
 	var main = w.document.getElementsByTagName("main")[0];
 	var header = w.document.getElementsByTagName("header")[0];
 	var footer = w.document.getElementsByTagName("footer")[0];
 	var body = w.document.getElementsByTagName("body")[0];
+	var axis = w.document.getElementsByTagName("aside")[0];
 
 	// hide main
 	main.style.display = "none";
@@ -15,7 +25,7 @@ var createBlocks = function(w) {
 	main.style.width = mainWidth + "px";
 
 	// determine block sizes
-	var defaultBlockWidth = 3; //px
+	var defaultBlockWidth = 5; //px
 	var blockBorder = 0;//1;//px
 	var blockMargin = 0;//3;//px
 	var cellWidth = defaultBlockWidth + blockBorder*2 + blockMargin*2;
@@ -32,6 +42,32 @@ var createBlocks = function(w) {
 	main.style["padding-right"] = extraPaddingWidth + "px";
 	main.style["padding-top"] = extraPaddingHeight + "px";
 	main.style["padding-bottom"] = extraPaddingHeight + "px";
+
+	// set up the axis
+	var hashDist = 30;
+	var hash, i;
+	var bPerHash = (Bmax - Bmin) * hashDist/mainHeight;
+	for (i=0;i<mainHeight/hashDist;i++) {
+		hash = document.createElement("div");
+		hash.innerHTML = i == 0 ? "B" : Math.floor(Bmin + i*bPerHash);
+		hash.classList.add("gridline");
+		hash.style.bottom = (footer.scrollHeight + hashDist*i) + "px";
+		hash.style.width = mainWidth + "px";
+		axis.appendChild(hash);
+	}
+	var aPerHash = (Amax - Amin) * hashDist/mainWidth;
+	for (i=0;i<mainWidth/hashDist;i++) {
+		hash = document.createElement("div");
+		hash.innerHTML = i == 0 ? "A" : Math.floor(Amin + i * aPerHash);
+		hash.classList.add("gridline");
+		hash.classList.add("vert");
+		hash.style.top = header.scrollHeight + "px";
+		hash.style.left = (hashDist*i) + "px";
+		hash.style.width = mainHeight + "px";
+		axis.appendChild(hash);
+	}
+	//axis[0].style.top = header.scrollHeight + "px";
+	//axis[0].style.width = mainHeight + "px";
 
 	// create the blocks
 	var r = 0, c = 0, block;
@@ -113,14 +149,8 @@ var getColorFromNominalRgb = function(nominalRGB) {
 
 
 // get the average A and B for the col/row
-var Lmin = 0;
-var Lmax = 155.0;
 var Lrange = Lmax - Lmin;
-var Amin = -200.0;
-var Amax = 200.0;
 var Arange = Amax - Amin;
-var Bmin = -200.0;
-var Bmax = 200.0;
 var Brange = Bmax - Bmin;
 var transNominalCoordsToLab = function(perc) {
 	perc[0] = Lmin + Lrange * perc[0];
@@ -151,17 +181,17 @@ var colorBlocks = function(w, depthPerc) {
 		var color = getColorForNominalCoords([depthPerc, colPerc, rowPerc]);
 		if (color != "") {
 			cell.style["background-color"] = color;
-			cell.setAttribute("title",color);
+			//cell.setAttribute("title",color);
 		} else {
 			cell.style["background-color"] = "#FFF";
-			cell.setAttribute("title","");
+			//cell.setAttribute("title","");
 		}
 	}
 };
 
 window.addEventListener("load", function() {(function(w) {
 	createBlocks(w);
-	var depthPerc = 80.0;
+	var depthPerc = .80;
 	var up = true;
 	var step = 0.01;
 	var stepAndRender = function() {
@@ -174,8 +204,8 @@ window.addEventListener("load", function() {(function(w) {
 			up = true;
 		}
 		colorBlocks(w, depthPerc);
-		document.getElementById("depth").innerHTML = depthPerc*100;
-		setTimeout(stepAndRender, 0);
+		document.getElementById("l-star").innerHTML = depthPerc*Lmax;
+		//setTimeout(stepAndRender, 0);
 	};
 	setTimeout(stepAndRender, 0);
 
