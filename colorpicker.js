@@ -236,6 +236,21 @@ var renderPlot = function() {
 			}
 		}
 	}
+	//render gridlines
+	if (env.gridlines.on) {
+		ctx.fillStyle = "#000000";
+		var i=0;
+		//vertical lines
+		for(x=0;x<env.plot.width;x+= env.gridlines.hashSpacing) {
+			i++;
+			ctx.fillRect(x, 0, (i % 5 === 0 ? 2: 1) , env.plot.height);
+		}
+		//horizontal lines
+		for(y=0;y<env.plot.height;y+= env.gridlines.hashSpacing) {
+			i++;
+			ctx.fillRect(0, y, env.plot.width, (i % 5 === 0 ? 2: 1));
+		}
+	}
 };
 var render = function() {
 	renderPlot();
