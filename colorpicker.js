@@ -1,12 +1,12 @@
 // Constants to tweak
 var Lmin = 0;
 var Lmax = 155.0;
-var Amin = -155.0;
+var Amin = -250.0;
 var Amax = 155.0;
 var Bmin = -155.0;
 var Bmax = 180.0;
 
-var defaultBlockWidth = 10; //px
+var defaultBlockWidth = 1; //px
 var blockBorder = 0;//1;//px
 var blockMargin = 0;//3;//px
 
@@ -102,45 +102,38 @@ var createBlocks = function(w) {
 
 // convert from LAB to XYZ
 //sRGB reference white (D65)
-var Xn=0.3127;
-var Yn=0.3290;
-var Zn=0.3583;
+//var Xn=0.3127;
+//var Yn=0.3290;
+//var Zn=0.3583;
+var XYZnorm = [0.3127,0.3290,0.3583];
 // helper function
 var finv = function(t) {
 	//      6.0/29.0
 	if (t > 0.20689303442296383) { 
-		return Math.pow(t, 3);
+		return t*t*t;//t^3
 	} else {
 		// 3.0 * (6.0/29.0)^2 *      (t-4.0/29.0);
 		return 0.12841854934601665 * (t-0.13793103448275862); 
 	}
 };
+var termVector = [];
 var transLabToXyz = function(LAB) {
 	var Lterm = (LAB[0]+16.0)/116.0;
-	LAB[0] = Xn * finv(Lterm + LAB[1]/500.0);
-	LAB[1] = Yn * finv(Lterm);
-	LAB[2] = Zn * finv(Lterm - LAB[2]/200.0);
+	termVector[0] = finv(Lterm + LAB[1]/500.0);
+	termVector[1] = finv(Lterm);
+	termVector[2] = finv(Lterm - LAB[2]/200.0);
+	vec3.mul(LAB, XYZnorm, termVector);
 };
 
 //convert from XYZ to RGB
 //XYZ -> nominal sRGB matrix
 var xyzToRgb = [
-/*
-	[3.2404542, -1.5371385, -0.4985314],
-	[-0.9692660,  1.8760108,  0.0415560],
-	[0.0556434, -0.2040259,  1.0572252]
-	*/
-	[3.240479, -1.537150, -0.498535 ],
-	[-0.969256, 1.875992,  0.041556],
-	[0.055648, -0.204043, 1.057311]
+	3.240479, -1.537150, -0.498535,
+	-0.969256, 1.875992,  0.041556,
+	0.055648, -0.204043, 1.057311
 ];
 var transXyzToNominalRgb = function(XYZ) {
-	var R = XYZ[0] * xyzToRgb[0][0] + XYZ[1] * xyzToRgb[0][1] + XYZ[2] * xyzToRgb[0][2];
-	var G = XYZ[0] * xyzToRgb[1][0] + XYZ[1] * xyzToRgb[1][1] + XYZ[2] * xyzToRgb[1][2];
-	var B = XYZ[0] * xyzToRgb[2][0] + XYZ[1] * xyzToRgb[2][1] + XYZ[2] * xyzToRgb[2][2];
-	XYZ[0] = R;
-	XYZ[1] = G;
-	XYZ[2] = B;
+	vec3.transformMat3(XYZ, XYZ, xyzToRgb);
 };
 
 // take rgb where each channel is [0,1.0] and convert to #RRGGBB
@@ -180,19 +173,9 @@ var toLog2 = [];
 // composite function that converts %s to a color
 var getColorForNominalCoords = function(v) {
 	transNominalCoordsToLab(v);
-	toLog[0] = v[0];
-	toLog[1] = v[1];
-	toLog[2] = v[2];
 	transLabToXyz(v);
-	toLog2[0] = v[0];
-	toLog2[1] = v[1];
-	toLog2[2] = v[2];
 	transXyzToNominalRgb(v);
 	var color = getColorFromNominalRgb(v);
-	if (color !== "") {
-		//console.log("LAB:" + toLog);
-		console.log("XYZ:" + toLog2);
-	}
 	return color;
 };
 
@@ -206,9 +189,9 @@ var colorBlocks = function(w, depthPerc) {
 	var cells = main.children;
 	var i = 0, cell;
 	for (;i < cells.length;i++) {
-		cell = cells[i];
-		// get mean % if grid is 0-1 in each direction
 		vector[0] = depthPerc;
+		// get mean % if grid is 0-1 in each direction
+		cell = cells[i];
 		vector[1] = (cell.data.col+0.5)/cols;
 		vector[2] = (cell.data.row+0.5)/rows;
 		var color = getColorForNominalCoords(vector);
@@ -238,7 +221,7 @@ window.addEventListener("load", function() {(function(w) {
 		}
 		colorBlocks(w, depthPerc);
 		document.getElementById("l-star").innerHTML = depthPerc*Lmax;
-		//setTimeout(stepAndRender, 0);
+		setTimeout(stepAndRender, 0);
 	};
 	setTimeout(stepAndRender, 0);
 
