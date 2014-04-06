@@ -6,7 +6,7 @@ var Amax = 155.0;
 var Bmin = -155.0;
 var Bmax = 180.0;
 
-var defaultBlockWidth = 3; //px
+var defaultBlockWidth = 10; //px
 var blockBorder = 0;//1;//px
 var blockMargin = 0;//3;//px
 
@@ -108,7 +108,7 @@ var Zn=0.3583;
 // helper function
 var finv = function(t) {
 	//      6.0/29.0
-	if (t > 0.20689655172413793) { 
+	if (t > 0.20689303442296383) { 
 		return Math.pow(t, 3);
 	} else {
 		// 3.0 * (6.0/29.0)^2 *      (t-4.0/29.0);
@@ -116,8 +116,7 @@ var finv = function(t) {
 	}
 };
 var transLabToXyz = function(LAB) {
-	//1.0/116.0 = 0.008620689655172414
-	var Lterm = 0.008620689655172414*(LAB[0]+16.0);
+	var Lterm = (LAB[0]+16.0)/116.0;
 	LAB[0] = Xn * finv(Lterm + LAB[1]/500.0);
 	LAB[1] = Yn * finv(Lterm);
 	LAB[2] = Zn * finv(Lterm - LAB[2]/200.0);
@@ -126,9 +125,14 @@ var transLabToXyz = function(LAB) {
 //convert from XYZ to RGB
 //XYZ -> nominal sRGB matrix
 var xyzToRgb = [
+/*
 	[3.2404542, -1.5371385, -0.4985314],
 	[-0.9692660,  1.8760108,  0.0415560],
 	[0.0556434, -0.2040259,  1.0572252]
+	*/
+	[3.240479, -1.537150, -0.498535 ],
+	[-0.969256, 1.875992,  0.041556],
+	[0.055648, -0.204043, 1.057311]
 ];
 var transXyzToNominalRgb = function(XYZ) {
 	var R = XYZ[0] * xyzToRgb[0][0] + XYZ[1] * xyzToRgb[0][1] + XYZ[2] * xyzToRgb[0][2];
@@ -169,13 +173,30 @@ var transNominalCoordsToLab = function(perc) {
 	perc[2] = Bmin + Brange * perc[2];
 };
 
+var toLog = [];
+var toLog2 = [];
+
+
 // composite function that converts %s to a color
-var getColorForNominalCoords = function(dim) {
-	transNominalCoordsToLab(dim);
-	transLabToXyz(dim);
-	transXyzToNominalRgb(dim);
-	return getColorFromNominalRgb(dim);
+var getColorForNominalCoords = function(v) {
+	transNominalCoordsToLab(v);
+	toLog[0] = v[0];
+	toLog[1] = v[1];
+	toLog[2] = v[2];
+	transLabToXyz(v);
+	toLog2[0] = v[0];
+	toLog2[1] = v[1];
+	toLog2[2] = v[2];
+	transXyzToNominalRgb(v);
+	var color = getColorFromNominalRgb(v);
+	if (color !== "") {
+		//console.log("LAB:" + toLog);
+		console.log("XYZ:" + toLog2);
+	}
+	return color;
 };
+
+var vector = [];
 
 
 var colorBlocks = function(w, depthPerc) {
@@ -187,9 +208,10 @@ var colorBlocks = function(w, depthPerc) {
 	for (;i < cells.length;i++) {
 		cell = cells[i];
 		// get mean % if grid is 0-1 in each direction
-		colPerc = (cell.data.col+0.5)/cols;
-		rowPerc = (cell.data.row+0.5)/rows;
-		var color = getColorForNominalCoords([depthPerc, colPerc, rowPerc]);
+		vector[0] = depthPerc;
+		vector[1] = (cell.data.col+0.5)/cols;
+		vector[2] = (cell.data.row+0.5)/rows;
+		var color = getColorForNominalCoords(vector);
 		if (color != "") {
 			cell.style["background-color"] = color;
 			//cell.setAttribute("title",color);
@@ -216,7 +238,7 @@ window.addEventListener("load", function() {(function(w) {
 		}
 		colorBlocks(w, depthPerc);
 		document.getElementById("l-star").innerHTML = depthPerc*Lmax;
-		setTimeout(stepAndRender, 0);
+		//setTimeout(stepAndRender, 0);
 	};
 	setTimeout(stepAndRender, 0);
 
