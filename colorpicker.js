@@ -1,11 +1,11 @@
 // Environmental setup
 var env = {
 	// color space ranges to graph
-	L: [0, 160.0],
+	L: [0, 105.0],
 	A: [-230.0, 150.0],
 	B: [-155.0, 180.0],
 	state: {
-		L: 80.0,
+		L: 105.0,
 		up: true,
 		step: 1.0
 	},
@@ -97,7 +97,7 @@ var finv = function(t) {
 	return 0.12841854934601665 * (t-0.13793103448275862);
 };
 //sRGB reference white (D65)
-var XYZnorm = [0.3127,0.3290,0.3583];
+var XYZnorm = [1.0, 1.0, 1.0];//[0.3127,0.3290,0.3583];
 var termVector = [];
 var transLabToXyz = function(LAB) {
 	var Lterm = (LAB[0]+16.0)/116.0;
@@ -107,12 +107,22 @@ var transLabToXyz = function(LAB) {
 	vec3.mul(LAB, XYZnorm, termVector);
 };
 
-//convert from XYZ to RGB
-//XYZ -> nominal sRGB matrix
+//convert from XYZ to sRGB
 var xyzToRgb = [
-	3.240479, -1.537150, -0.498535,
-	-0.969256, 1.875992,  0.041556,
-	0.055648, -0.204043, 1.057311
+	//XYZ->sRGB D50
+	//http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html#WSMatrices 
+	//3.1338561, -1.6168667, -0.4906146,
+	//-0.9787684,  1.9161415,  0.0334540,
+	// 0.0719453, -0.2289914,  1.4052427,
+	//XYZ->sRGB D65
+	//From http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
+	3.2404542, -1.5371385, -0.4985314,
+	-0.9692660,  1.8760108,  0.0415560,
+	0.0556434, -0.2040259,  1.0572252
+	//From somewhere else
+	//3.240479, -1.537150, -0.498535,
+	//-0.969256, 1.875992,  0.041556,
+	//0.055648, -0.204043, 1.057311
 ];
 var transXyzToNominalRgb = function(XYZ) {
 	vec3.transformMat3(XYZ, XYZ, xyzToRgb);
@@ -123,7 +133,13 @@ var zeroPad = function(a, n) {
 	return a.length >= n ? a.substr(0,3) : zeroPad("0" + a, n);
 };
 var nominalChannelToAbs = function(nominalChannel) {
-	return zeroPad(Math.floor((nominalChannel*256.0)).toString(16), 2);
+	//this if/else is gamma correction
+	if (nominalChannel <= 0.0031308) {
+		nominalChannel = 12.92*nominalChannel;
+	} else {
+		nominalChannel = 1.055*Math.pow(nominalChannel, 1.0/2.4) - 0.055;
+	}
+	return zeroPad(Math.floor((nominalChannel*255)).toString(16), 2);
 };
 var getColorFromNominalRgb = function(nominalRGB) {
 	if (nominalRGB[0] > 1.0 || nominalRGB[0] < 0.0 ||
@@ -143,60 +159,6 @@ var getColorForLab = function(v) {
 	transXyzToNominalRgb(v);
 	var color = getColorFromNominalRgb(v);
 	return color;
-};
-
-var render = function() {
-	// set up the axis
-	var hashDist = 30;
-	var hash, i;
-	var bPerHash = (Bmax - Bmin) * hashDist/mainHeight;
-	for (i=0;i<mainHeight/hashDist;i++) {
-		hash = document.createElement("div");
-		if (i == 0) {
-			hash.innerHTML = "B*";
-			hash.style["font-weight"] = 800;
-		} else {
-			hash.innerHTML = Math.floor(Bmin + i*bPerHash);
-		}
-		hash.classList.add("gridline");
-		hash.style.bottom = (footer.scrollHeight + hashDist*i + extraPaddingHeight + 2) + "px";
-		hash.style.width = (mainWidth-extraPaddingWidth*2) + "px";
-		axis.appendChild(hash);
-	}
-	var aPerHash = (Amax - Amin) * hashDist/mainWidth;
-	for (i=0;i<mainWidth/hashDist;i++) {
-		hash = document.createElement("div");
-		if (i == 0) {
-			hash.innerHTML = "A*";
-			hash.style["font-weight"] = 800;
-		} else {
-			hash.innerHTML = Math.floor(Amin + i * aPerHash);
-		}
-		hash.classList.add("gridline");
-		hash.classList.add("vert");
-		hash.style.top = (header.scrollHeight + extraPaddingWidth) + "px";
-		hash.style.left = (hashDist*i) + "px";
-		hash.style.width = (mainHeight-extraPaddingHeight*2) + "px";
-		axis.appendChild(hash);
-	}
-	//axis[0].style.top = header.scrollHeight + "px";
-	//axis[0].style.width = mainHeight + "px";
-
-	// create the blocks
-	var r = 0, c = 0, block;
-	for (;r < rows;r++) {
-		c = 0;
-		for (;c < cols;c++) {
-			block = document.createElement("div");
-			block.classList.add("block");
-			block.style.width = defaultBlockWidth + "px";
-			block.style.height = defaultBlockWidth + "px";
-			block.data = block.data || {};
-			block.data.col = c;
-			block.data.row = r;
-			main.appendChild(block);
-		}
-	}
 };
 
 //TODO: We'll add in border/margin later.
