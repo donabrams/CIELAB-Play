@@ -1,7 +1,7 @@
 // Environmental setup
 var env = {
 	// color space ranges to graph
-	L: [0, 153.0],
+	L: [0, 160.0],
 	A: [-250.0, 155.0],
 	B: [-155.0, 180.0],
 	state: {
@@ -240,15 +240,21 @@ var renderPlot = function() {
 	if (env.gridlines.on) {
 		ctx.fillStyle = "#000000";
 		var i=0;
+
 		//vertical lines
 		for(x=0;x<env.plot.width;x+= env.gridlines.hashSpacing) {
 			i++;
 			ctx.fillRect(x, 0, (i % 5 === 0 ? 2: 1) , env.plot.height);
+			// A per hash = A per Row / pixels per Row * pixels per Hash
+			ctx.strokeText(Math.floor(env.A[0]+aPerRow*rows/env.plot.width*x).toString(), x, env.gridlines.hashSpacing/2);
 		}
 		//horizontal lines
 		for(y=0;y<env.plot.height;y+= env.gridlines.hashSpacing) {
 			i++;
 			ctx.fillRect(0, y, env.plot.width, (i % 5 === 0 ? 2: 1));
+			// B per hash = B per Col / pixels per Col * pixels per Hash
+			ctx.strokeText(Math.floor(env.B[0]+bPerCol*cols/env.plot.height*y).toString(), 0, y);
+		
 		}
 	}
 };
