@@ -118,6 +118,7 @@ var getColorForLab = function(v) {
 //TODO: We'll add in border/margin later.
 var renderPlot = function() {
 	var canvas = env.plot.canvas[env.state.curCanvas ? 0 : 1];
+	var activeCanvas = env.plot.canvas[env.state.curCanvas ? 1 : 0];
 	var ctx = canvas.getContext("2d");
 	//clear the canvas
 	ctx.clearRect(0,0,env.plot.width,env.plot.height);
@@ -182,8 +183,9 @@ var renderPlot = function() {
 		ctx.fillRect(env.pointer.x-env.pointer.xOffset, env.pointer.y-4-env.pointer.yOffset, 1, 8);
 	}
 
-	env.plot.canvas[env.state.curCanvas ? 1 : 0].style.display = 'none';
+	activeCanvas.style.display = 'none';
 	canvas.style.display='inline';
+	env.state.curCanvas = env.state.curCanvas ? 0 : 1;
 };
 var render = function() {
 	renderPlot();
