@@ -1,11 +1,11 @@
 // Environmental setup
 var env = {
 	// color space ranges to graph
-	L: [0, 105.0],
-	A: [-230.0, 150.0],
-	B: [-155.0, 180.0],
+	L: [0, 100.0],
+	A: [-128.0, 128.0],
+	B: [-128.0, 128.0],
 	state: {
-		L: 105.0,
+		L: 24.0,
 		up: true,
 		step: 1.0
 	},
@@ -97,14 +97,16 @@ var finv = function(t) {
 	return 0.12841854934601665 * (t-0.13793103448275862);
 };
 //sRGB reference white (D65)
-var XYZnorm = [1.0, 1.0, 1.0];//[0.3127,0.3290,0.3583];
+//[0.3127,0.3290,0.3583];
+// 2 degrees observance, D65
+// https://github.com/THEjoezack/ColorMine/blob/master/ColorMine/ColorSpaces/Conversions/XyzConverter.cs
+var XYZnorm = [0.95047, 1.00, 1.08883];
 var termVector = [];
 var transLabToXyz = function(LAB) {
 	var Lterm = (LAB[0]+16.0)/116.0;
-	termVector[0] = finv(Lterm + LAB[1]/500.0);
-	termVector[1] = finv(Lterm);
-	termVector[2] = finv(Lterm - LAB[2]/200.0);
-	vec3.mul(LAB, XYZnorm, termVector);
+	LAB[0] = XYZnorm[0] * finv(Lterm + LAB[1]/500.0);
+	LAB[1] = XYZnorm[1] * finv(Lterm);
+	LAB[2] = XYZnorm[2] * finv(Lterm - LAB[2]/200.0);
 };
 
 //convert from XYZ to sRGB
@@ -125,7 +127,10 @@ var xyzToRgb = [
 	//0.055648, -0.204043, 1.057311
 ];
 var transXyzToNominalRgb = function(XYZ) {
-	vec3.transformMat3(XYZ, XYZ, xyzToRgb);
+	var x = XYZ[0], y = XYZ[1], z = XYZ[2], m=xyzToRgb;
+	XYZ[0] = x * m[0] + y * m[1] + z * m[2];
+	XYZ[1] = x * m[3] + y * m[4] + z * m[5];
+    XYZ[2] = x * m[6] + y * m[7] + z * m[8];
 };
 
 // take rgb where each channel is [0,1.0] and convert to #RRGGBB
@@ -185,7 +190,6 @@ var renderPlot = function() {
 		a, b,
 		aInit = env.A[0] + aPerRow/2.0,
 		bInit = env.B[0] + bPerCol/2.0;
-	var bReset = b;
 	for (r=0, y=0, a=aInit; r<rows; r++, y+=cellSize, a+=aPerRow) {
 		for(c=0, x=0, b=bInit; c<cols; c++, x+=cellSize, b+=bPerCol) {
 			vector[0] = L;
