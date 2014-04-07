@@ -15,7 +15,7 @@ var env = {
 		margin: 0//px
 	},
 	gridlines: {
-		on: true,
+		on: false,
 		hashSpacing: 30//px
 	},
 	// These values are calculated from the config above and
@@ -262,6 +262,10 @@ var restartRenderer = function() {
 };
 // initialize and start on load of page
 window.addEventListener("load", function() {
+		intializeEnvironment();
+		restartRenderer();
+	}, false);
+window.addEventListener("resize", function() {
 		intializeEnvironment();
 		restartRenderer();
 	}, false);
