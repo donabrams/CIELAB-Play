@@ -185,7 +185,7 @@ var render = function() {
 	renderPlot();
 	// update text of L*
 	env.lstar.replaceChild(
-		document.createTextNode(env.state.L.toString()),
+		document.createTextNode(env.state.L.toFixed(1)),
 		env.lstar.firstChild);
 };
 
