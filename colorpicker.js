@@ -7,7 +7,8 @@ var env = {
 	state: {
 		L: 67.5,
 		up: true,
-		step: 1.0
+		step: 1.0,
+		curCanvas: 1
 	},
 	cell: {
 		width: 15,//px
@@ -17,7 +18,7 @@ var env = {
 	// These values are calculated from the config above and
 	// the browser env by intializeEnvironment
 	plot: {
-		canvas: null,
+		canvas: [],
 		cols: 0,
 		rows: 0,
 		width: 0,
@@ -116,7 +117,7 @@ var getColorForLab = function(v) {
 
 //TODO: We'll add in border/margin later.
 var renderPlot = function() {
-	var canvas = env.plot.canvas;
+	var canvas = env.plot.canvas[env.state.curCanvas ? 0 : 1];
 	var ctx = canvas.getContext("2d");
 	//clear the canvas
 	ctx.clearRect(0,0,env.plot.width,env.plot.height);
@@ -180,6 +181,9 @@ var renderPlot = function() {
 		ctx.fillRect(env.pointer.x-4-env.pointer.xOffset, env.pointer.y-env.pointer.yOffset, 8, 1);
 		ctx.fillRect(env.pointer.x-env.pointer.xOffset, env.pointer.y-4-env.pointer.yOffset, 1, 8);
 	}
+
+	env.plot.canvas[env.state.curCanvas ? 1 : 0].style.display = 'none';
+	canvas.style.display='inline';
 };
 var render = function() {
 	renderPlot();
@@ -265,8 +269,13 @@ var intializeEnvironment = function(w) {
 	env.plot.height = mainHeight-extraPaddingHeight*2;
 
 	// create a canvas in main with the appropriate dimensions
-	var canvas = env.plot.canvas = document.createElement("canvas");
-	canvas.setAttribute("id", "cielabPlot");
+	var canvas = env.plot.canvas[0] = document.createElement("canvas");
+	canvas.setAttribute("width", env.plot.width + "px");
+	canvas.setAttribute("height", env.plot.height + "px");
+	canvas.addEventListener("mousemove", colorLister);
+	canvas.style.display = 'none';
+	main.appendChild(canvas);
+	var canvas = env.plot.canvas[1] = document.createElement("canvas");
 	canvas.setAttribute("width", env.plot.width + "px");
 	canvas.setAttribute("height", env.plot.height + "px");
 	canvas.addEventListener("mousemove", colorLister);
