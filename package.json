@@ -1,5 +1,5 @@
 {
-  "name": "edpain",
+  "name": "CIELAB-Play",
   "version": "0.0.2",
   "dependencies": {
     "express": "4.0.0-rc4",
