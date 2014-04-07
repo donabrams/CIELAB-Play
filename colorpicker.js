@@ -7,7 +7,7 @@ var env = {
 	state: {
 		L: 67.5,
 		up: true,
-		step: 0.5
+		step: 1.0
 	},
 	cell: {
 		width: 15,//px
@@ -214,7 +214,7 @@ var stepAndRender = function() {
 	// do a render of the plot
 	render();
 	// queue the next cycle
-	timeoutId = setTimeout(stepAndRender, 100);
+	timeoutId = setTimeout(stepAndRender, 500);
 };
 var restartRenderer = function() {
 	// stop current renderer cycle
