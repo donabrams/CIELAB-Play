@@ -1,0 +1,11 @@
+{
+  "name": "edpain",
+  "version": "0.0.2",
+  "dependencies": {
+    "express": "4.0.0-rc4",
+    "serve-static": "1.0.3"
+  },
+  "engines": {
+    "node": "0.10.x"
+  }
+}
