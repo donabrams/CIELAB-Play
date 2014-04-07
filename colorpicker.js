@@ -5,18 +5,14 @@ var env = {
 	A: [-128.0, 128.0],
 	B: [-128.0, 128.0],
 	state: {
-		L: 24.0,
+		L: 67.5,
 		up: true,
-		step: 1.0
+		step: 0.5
 	},
 	cell: {
-		width: 1,//px
-		border: 0,//px
-		margin: 0//px
-	},
-	gridlines: {
-		on: false,
-		hashSpacing: 30//px
+		width: 15,//px
+		border: 1,//px
+		margin: 2//px
 	},
 	// These values are calculated from the config above and
 	// the browser env by intializeEnvironment
@@ -28,62 +24,14 @@ var env = {
 		height: 0
 	},
 	// Node where L* is written 
-	lstar: null
-};
-
-// create the setup
-var intializeEnvironment = function(w) {
-	var main = document.getElementsByTagName("main")[0];
-	var header = document.getElementsByTagName("header")[0];
-	var footer = document.getElementsByTagName("footer")[0];
-	var body = document.getElementsByTagName("body")[0];
-
-	// hide main and clear any existing child nodes
-	main.style.display = "none";
-	while (main.firstChild) {
-	    main.removeChild(main.firstChild);
+	lstar: null,
+	pointer: {
+		on: false,
+		xOffset: 0,
+		yOffset: 0,
+		x: -1,
+		y: -1
 	}
-
-	// calculate the size of the main area
-	var mainWidth = body.scrollWidth;
-	var mainHeight = body.scrollHeight - header.scrollHeight - 
-		footer.scrollHeight-4;
-
-	// determine cell size (square)
-	var cellDim = env.cell.width + 
-		env.cell.border*2 + 
-		env.cell.margin*2;
-	env.plot.cols = Math.floor(mainWidth / cellDim);
-	env.plot.rows = Math.floor((mainHeight-2) / cellDim);
-
-	//evenly distribute the extra padding in main
-	var extraPaddingWidth = (mainWidth - 
-		env.plot.cols * env.cell.width)/2;
-	var extraPaddingHeight = (mainHeight - 2 - 
-		env.plot.rows * env.cell.width)/2;
-	main.style["padding"] = extraPaddingWidth + "px " + 
-		extraPaddingHeight + "px";
-
-	//set the environment data minus the padding
-	env.plot.width = mainWidth-extraPaddingWidth*2;
-	env.plot.height = mainHeight-extraPaddingHeight*2;
-
-	// create a canvas in main with the appropriate dimensions
-	var canvas = env.plot.canvas = document.createElement("canvas");
-	canvas.setAttribute("id", "cielabPlot");
-	canvas.setAttribute("width", env.plot.width + "px");
-	canvas.setAttribute("height", env.plot.height + "px");
-	main.appendChild(canvas);
-
-	//fill in the initial L*
-	env.lstar = document.getElementById("l-star");
-	while (env.lstar.firstChild) {
-	    env.lstar.removeChild(env.lstar.firstChild);
-	}
-	env.lstar.appendChild(document.createTextNode(env.state.L.toString()));
-
-	//show main
-	main.style.display = "block";
 };
 
 // convert from LAB to XYZ
@@ -174,7 +122,9 @@ var renderPlot = function() {
 	ctx.clearRect(0,0,env.plot.width,env.plot.height);
 
 	//cache these vars locally for now
-	var cellSize = env.cell.width;
+	var colorSize = env.cell.width;
+	var cellSize = colorSize + env.cell.margin*2 + env.cell.border*2;
+	var border = env.cell.border;
 	var rows = env.plot.rows;
 	var cols = env.plot.cols;
 	//calculate the increases in A/B per row/col
@@ -190,6 +140,8 @@ var renderPlot = function() {
 		a, b,
 		aInit = env.A[0] + aPerRow/2.0,
 		bInit = env.B[0] + bPerCol/2.0;
+	ctx.strokeStyle = 'black';
+	ctx.lineWidth = border;
 	for (r=0, y=0, a=aInit; r<rows; r++, y+=cellSize, a+=aPerRow) {
 		for(c=0, x=0, b=bInit; c<cols; c++, x+=cellSize, b+=bPerCol) {
 			vector[0] = L;
@@ -197,31 +149,36 @@ var renderPlot = function() {
 			vector[2] = b;
 			color = getColorForLab(vector);
 			if (color !== "") {
+				ctx.beginPath();
+				ctx.rect(x+border, y+border, colorSize, colorSize);
 				ctx.fillStyle = color;
-				ctx.fillRect(x, y, cellSize, cellSize);
+				ctx.fill();
+				ctx.stroke();
 			}
 		}
 	}
-	//render gridlines
-	if (env.gridlines.on) {
-		ctx.fillStyle = "#000000";
-		var i=0;
+	x = env.pointer.x-env.pointer.xOffset;
+	y = env.pointer.y-env.pointer.yOffset;
+	var row = Math.floor(y/cellSize);
+	var col = Math.floor(x/cellSize);
+	if (row < rows && col < cols) {
+		a = aInit + row * aPerRow;
+		b = bInit + col * bPerCol;
+		vector[0] = L;
+		vector[1] = a;
+		vector[2] = b;
+		color = getColorForLab(vector);
+		if (color !== "") {
+			var target = document.getElementById("selectedColor");
+			target.replaceChild(document.createTextNode(color), target.firstChild);
+			target.style['background-color'] = color;
+			target.style['color'] = L < 30 ? 'white' : 'black';
+		}
+	}
 
-		//vertical lines
-		for(x=0;x<env.plot.width;x+= env.gridlines.hashSpacing) {
-			i++;
-			ctx.fillRect(x, 0, (i % 5 === 0 ? 2: 1) , env.plot.height);
-			// B = B per Col / pixels per Col * pixels per Hash * hash #
-			ctx.strokeText(Math.floor(env.B[0]+bPerCol*cols/env.plot.width*x).toString(), x, env.gridlines.hashSpacing/2);
-		}
-		//horizontal lines
-		for(y=0;y<env.plot.height;y+= env.gridlines.hashSpacing) {
-			i++;
-			ctx.fillRect(0, y, env.plot.width, (i % 5 === 0 ? 2: 1));
-			// A = A per Row / pixels per Row * pixels per Hash * hash #
-			ctx.strokeText(Math.floor(env.A[0]+aPerRow*rows/env.plot.height*y).toString(), 0, y);
-		
-		}
+	if (env.pointer.on && env.pointer.x > -1) {
+		ctx.fillRect(env.pointer.x-4-env.pointer.xOffset, env.pointer.y-env.pointer.yOffset, 8, 1);
+		ctx.fillRect(env.pointer.x-env.pointer.xOffset, env.pointer.y-4-env.pointer.yOffset, 1, 8);
 	}
 };
 var render = function() {
@@ -231,6 +188,13 @@ var render = function() {
 		document.createTextNode(env.state.L.toString()),
 		env.lstar.firstChild);
 };
+
+var colorLister = function(event) {
+	env.pointer.x = event.clientX;
+	env.pointer.y = event.clientY;
+	render();
+};
+
 var step = function() {
 	// progress the state
 	env.state.L = env.state.up ? (env.state.L + env.state.step) : (env.state.L - env.state.step);
@@ -250,7 +214,7 @@ var stepAndRender = function() {
 	// do a render of the plot
 	render();
 	// queue the next cycle
-	timeoutId = setTimeout(stepAndRender, 0);
+	timeoutId = setTimeout(stepAndRender, 100);
 };
 var restartRenderer = function() {
 	// stop current renderer cycle
@@ -260,6 +224,65 @@ var restartRenderer = function() {
 	// kick off the cycle
 	timeoutId = setTimeout(stepAndRender, 0);
 };
+
+// create the setup
+var intializeEnvironment = function(w) {
+	var main = document.getElementsByTagName("main")[0];
+	var header = document.getElementsByTagName("header")[0];
+	var footer = document.getElementsByTagName("footer")[0];
+	var body = document.getElementsByTagName("body")[0];
+
+	// hide main and clear any existing child nodes
+	main.style.display = "none";
+	while (main.firstChild) {
+	    main.removeChild(main.firstChild);
+	}
+
+	// calculate the size of the main area
+	var mainWidth = body.scrollWidth;
+	var mainHeight = body.scrollHeight - header.scrollHeight - 
+		footer.scrollHeight-4;
+
+	// determine cell size (square)
+	env.cell.total = env.cell.width + 
+		env.cell.border*2 + 
+		env.cell.margin*2;
+	env.plot.cols = Math.floor(mainWidth / env.cell.total);
+	env.plot.rows = Math.floor((mainHeight-2) / env.cell.total);
+
+	//evenly distribute the extra padding in main
+	var extraPaddingWidth = (mainWidth - 
+		env.plot.cols * env.cell.total)/2;
+	var extraPaddingHeight = (mainHeight - 2 - 
+		env.plot.rows * env.cell.total)/2;
+	main.style["padding"] = extraPaddingWidth + "px " + 
+		extraPaddingHeight + "px";
+	env.pointer.xOffset = extraPaddingWidth;
+	env.pointer.yOffset = extraPaddingHeight + header.scrollHeight + 4;
+
+	//set the environment data minus the padding
+	env.plot.width = mainWidth-extraPaddingWidth*2;
+	env.plot.height = mainHeight-extraPaddingHeight*2;
+
+	// create a canvas in main with the appropriate dimensions
+	var canvas = env.plot.canvas = document.createElement("canvas");
+	canvas.setAttribute("id", "cielabPlot");
+	canvas.setAttribute("width", env.plot.width + "px");
+	canvas.setAttribute("height", env.plot.height + "px");
+	canvas.addEventListener("mousemove", colorLister);
+	main.appendChild(canvas);
+
+	//fill in the initial L*
+	env.lstar = document.getElementById("l-star");
+	while (env.lstar.firstChild) {
+	    env.lstar.removeChild(env.lstar.firstChild);
+	}
+	env.lstar.appendChild(document.createTextNode(env.state.L.toString()));
+
+	//show main
+	main.style.display = "block";
+};
+
 // initialize and start on load of page
 window.addEventListener("load", function() {
 		intializeEnvironment();

@@ -26,6 +26,16 @@ footer {
   bottom: 0;
   width: 100%;
 }
+footer div {
+  float: left;
+  margin: 0.25em;
+  padding: 0.25em;
+  width: 5em;
+  height: 1em;
+  border: 1px solid #000;
+  border-radius: 3px;
+  font-weight: 800;
+}
 footer p {
   text-align: right;
   margin: 0.5em 1em;
